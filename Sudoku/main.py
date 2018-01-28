@@ -69,10 +69,11 @@ def eliminate(values):
             box_peers_keys = peers[key]
             for peer_key in box_peers_keys:
                 peer_value = values[peer_key]
-                peer_value = peer_value.replace(value, '')
-                values[peer_key] = peer_value
+                if len(peer_value) > 1:
+                    peer_value = peer_value.replace(value, '')
+                    values[peer_key] = peer_value
     return values
-
+ 
 
 def only_choice(values):
     """Finalize all values that are the only choice for a unit.
@@ -83,7 +84,6 @@ def only_choice(values):
     Input: Sudoku in dictionary form.
     Output: Resulting Sudoku in dictionary form after filling in only choices.
     """
-    # TODO: Implement only choice strategy here
     for unit in unitlist:
         for digit in DIGITS:
             digit_count = 0
