@@ -248,9 +248,8 @@ if __name__ == "__main__":
     # print(result)
     display(result)
     try:
-        # import PySudoku
-        # PySudoku.play(grid2values(diag_sudoku_grid), result, history)
-        pass
+        import PySudoku
+        PySudoku.play(grid2values(diag_sudoku_grid), result, history)
 
     except SystemExit:
         pass
