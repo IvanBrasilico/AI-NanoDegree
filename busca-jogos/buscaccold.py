@@ -1,6 +1,5 @@
 import random
-from collections import defaultdict, OrderedDict
-from pprint import pprint
+from collections import OrderedDict
 
 COLUNAS = 'ABCDEF'
 PILHAS = 'abcde'
@@ -175,19 +174,11 @@ class Patio():
         :param posicao: String  'B5' 'coluna_altura'
         :return: None se pilha/pátio cheio, senão posição
         """
-        # print(len(self._pilhas), len(self._containers), nome_pilha)
         if nome_pilha is None:
             for pilha in self._pilhas.values():
                 posicao = self.add_container(container, pilha._nome, posicao)
-                if posicao:
+                if posicao is not None:
                     break
-            # if len(self._containers) >= 30:
-            # print(posicao, nome_pilha)
-            if not posicao:  # pilhas cheias, criar nova
-                nome_pilha = '{0:04d}'.format(len(self._pilhas) + 1)
-                # print('Add pilha %s ' % nome_pilha)
-                self.add_pilha(nome_pilha)
-                posicao = self.stack(container, nome_pilha, posicao)
         else:
             posicao = self.stack(container, nome_pilha, posicao)
         return posicao
@@ -318,86 +309,67 @@ print(gerente.remove_caminho('020'))
 print(gerente.remove_caminho('003'))
 print(patio._history)
 
-lista_containers = ['{0:05d}'.format(num) for num in range(100000)]
+lista_containers = ['{0:05d}'.format(num) for num in range(10000)]
 
-
-# TODO: criar metodos:
-# 1. Teste de pilha e patio confirmando comportamento esperado
-# 2. "Reserva" na reposicao (se esta na fila, deixar em cima
-# 3. Criar tempo randomico, e colocar de volta na pilha de tempo medio mais proximo,
-# na selecao de fila para retirada, criar uma probabilidade de curva normal para priorizar
-# os de tempo estimado menores
-def test_gerente(gerente, mode, turns=100):
-    totalgeral = 0
-    for turn in range(turns):
-        for add_cc in range(30):
-            ind = random.randint(0, len(lista_containers) - 1)
-            numero = lista_containers.pop(ind)
-            posicao = gerente.add_container(Container(numero))
-            # print('numero', numero)
-            # print('Posição',  posicao)
-        # print('Turn: %s Containers: %s' % (turn, patio_carlo._containers.keys()))
-
-        totalremocoes = 0
-        caminhos = []
-        numeros = [k for k in patio_carlo._containers.keys()]
-        # print(numeros)
-        for remove_cc in range(30):
-            numero = numeros.pop(random.randint(0, len(numeros) - 1))
-            # print(numero)
-            caminho = gerente.monta_caminho_remocao(numero)
-            caminhos.append((len(caminho), numero))
-        if mode == 'ordered':
-            caminhos = sorted(caminhos, key=lambda x: x[0])
-        for _, numero in caminhos:
-            caminho = gerente.remove_caminho(numero)
-            totalremocoes += len(caminho)
-            for container in caminho:
-                if container._numero != numero:
-                    gerente.add_container(container)
-            # print('caminho', caminho)
-            totalremocoes += len(caminho)
-        # print('Turn: %s Remoções: %s' % (turn, totalremocoes))
-        totalgeral += totalremocoes
-    print('Média de remoções: %s' % (totalgeral / (turn + 1)))
-    return (totalgeral / (turn + 1))
-
-
-# Testa inclusão automatica de pilhas
-patio_carlo = Patio()
-gerente = GerenteRemocao(patio_carlo)
-print(len(patio_carlo._containers))
-print(len(patio_carlo._pilhas))
-
-for add_cc in range(32):
-    ind = random.randint(0, len(lista_containers) - 1)
-    numero = lista_containers.pop(ind)
-    gerente.add_container(Container(numero))
-
-print(len(patio_carlo._containers))
-print(len(patio_carlo._pilhas))
-
-for nome, pilha in patio_carlo._pilhas.items():
-    print(nome)
-    pprint(pilha._pilha)
-
-# Com pré-load
-results = defaultdict(dict)
-for pre_load in [0, 60, 150, 300, 1000]:
-    print('Pre-load de %s' % pre_load)
+# Caothic
+totalgeral = 0
+for turn in range(10):
     patio_carlo = Patio()
+    patio_carlo.add_pilha('TESTE')
     gerente = GerenteRemocao(patio_carlo)
-    for add_cc in range(pre_load):
+    # print('1')
+    for add_cc in range(20):
         ind = random.randint(0, len(lista_containers) - 1)
         numero = lista_containers.pop(ind)
-        gerente.add_container(Container(numero))
-    for mode in [None, 'ordered']:
-        print('Gerente criado: %s containers' % len(patio_carlo._containers))
-        print('Gerente criado: %s pilhas' % len(patio_carlo._pilhas))
-        media_remocoes = test_gerente(gerente, mode)
-        results[pre_load][mode] = media_remocoes
-        print('Gerente pos teste: %s containers' % len(patio_carlo._containers))
-        print('Gerente pos teste: %s pilhas' % len(patio_carlo._pilhas))
+        posicao = gerente.add_container(Container(numero))
+        # print('numero', numero)
+        # print('Posição',  posicao)
+    # print('2')
+    # print('Turn: %s Containers: %s' % (turn, patio_carlo._containers.keys()))
+    numeros = [k for k in patio_carlo._containers.keys()]
+    # print(numeros)
+    totalremocoes = 0
+    for remove_cc in range(20):
+        numeros = [k for k in patio_carlo._containers.keys()]
+        # print(numeros)
+        # TODO: fazer reposição
+        if len(numeros) == 0:
+            break
+        numero = random.choice(numeros)
+        caminho = gerente.remove_caminho(numero)
+        totalremocoes += len(caminho)
+        for container in caminho:
+            if container._numero != numero:
+                gerente.add_container(container)
+        # print('caminho', caminho)
+    print('Turn: %s Remoções: %s' % (turn, totalremocoes))
+    totalgeral += totalremocoes
+print(totalgeral/turn)
 
-for pre_load, modes in results.items():
-    print(pre_load, modes[None], modes['ordered'], '{:02.2f}'.format(modes['ordered'] / modes[None]))
+#Ordered
+totalgeral = 0
+for turn in range(10):
+    patio_carlo = Patio()
+    patio_carlo.add_pilha('TESTE')
+    gerente = GerenteRemocao(patio_carlo)
+    for add_cc in range(20):
+        ind = random.randint(0, len(lista_containers) - 1)
+        numero = lista_containers.pop(ind)
+        posicao = gerente.add_container(Container(numero))
+    numeros = [k for k in patio_carlo._containers.keys()]
+    totalremocoes = 0
+    caminhos = []
+    for remove_cc in range(20):
+        numeros = [k for k in patio_carlo._containers.keys()]
+        numero = random.choice(numeros)
+        caminho = gerente.monta_caminho_remocao(numero)
+        caminhos.append((len(caminho), numero))
+    for _, numero in sorted(caminhos, key=lambda x: x[0]):
+        caminho = gerente.remove_caminho(numero)
+        for container in caminho:
+            if container._numero != numero:
+                gerente.add_container(container)
+        totalremocoes += len(caminho)
+    print('Turn: %s Remoções: %s' % (turn, totalremocoes))
+    totalgeral += totalremocoes
+print(totalgeral/turn)
