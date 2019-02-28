@@ -318,8 +318,7 @@ print(gerente.remove_caminho('020'))
 print(gerente.remove_caminho('003'))
 print(patio._history)
 
-lista_containers = ['{0:06d}'.format(num) for num in range(200000)]
-
+lista_containers = ['{0:05d}'.format(num) for num in range(99999)]
 
 # TODO: criar metodos:
 # 1. Teste de pilha e patio confirmando comportamento esperado
@@ -327,12 +326,19 @@ lista_containers = ['{0:06d}'.format(num) for num in range(200000)]
 # 3. Criar tempo randomico, e colocar de volta na pilha de tempo medio mais proximo,
 # na selecao de fila para retirada, criar uma probabilidade de curva normal para priorizar
 # os de tempo estimado menores
-def test_gerente(gerente, mode, turns=200, fila=30):
+
+containeres_criados = 0
+
+
+def test_gerente(gerente, mode, turns=300, fila=40):
+    global containeres_criados
     totalgeral = 0
     for turn in range(turns):
         for add_cc in range(fila):
-            ind = random.randint(0, len(lista_containers) - 1)
-            numero = lista_containers.pop(ind)
+            # ind = random.randint(0, len(lista_containers) - 1)
+            # numero = lista_containers.pop(ind)
+            containeres_criados += 1
+            numero = '{0:07d}'.format(containeres_criados)
             posicao = gerente.add_container(Container(numero))
             # print('numero', numero)
             # print('Posição',  posicao)
@@ -342,21 +348,40 @@ def test_gerente(gerente, mode, turns=200, fila=30):
         caminhos = []
         numeros = [k for k in patio_carlo._containers.keys()]
         # print(numeros)
+        numeros_previstos = []
         for remove_cc in range(fila):
             numero = numeros.pop(random.randint(0, len(numeros) - 1))
             # print(numero)
             caminho = gerente.monta_caminho_remocao(numero)
             caminhos.append((len(caminho), numero))
+            numeros_previstos.append(numero)
         if mode == 'ordered':
             caminhos = sorted(caminhos, key=lambda x: x[0])
         for _, numero in caminhos:
-            caminho = gerente.remove_caminho(numero)
-            totalremocoes += len(caminho)
-            for container in caminho:
-                if container._numero != numero:
-                    gerente.add_container(container)
+            caminho2 = gerente.remove_caminho(numero)
+            totalremocoes += len(caminho2)
+            # Algoritmo de recolocação de containers
+            # TODO: mover este algoritmo para Gerente
+            # 1. Limpar container já retirado
+            caminho_limpo = [
+                container for container in caminho2
+                if container._numero !=numero
+            ]
+            # Algoritmo stay - colocar conteiners previstos "por cima"
+            if mode == 'stay':
+                filaum = []
+                filadois = []
+                for container in caminho_limpo:
+                    if container._numero in numeros_previstos:
+                        # print('Stay ativado!!!')
+                        filadois.append(container)
+                    else:
+                        filaum.append(container)
+                caminho_limpo = [*filaum, *filadois]
+            # 2. Recolocar containers
+            for container in caminho_limpo:
+                gerente.add_container(container)
             # print('caminho', caminho)
-            totalremocoes += len(caminho)
         # print('Turn: %s Remoções: %s' % (turn, totalremocoes))
         totalgeral += totalremocoes
     print('Média de remoções: %s' % (totalgeral / (turn + 1)))
@@ -381,8 +406,8 @@ for nome, pilha in patio_carlo._pilhas.items():
     print(nome)
     pprint(pilha._pilha)
 
-PRE_LOADS = [0, 60, 150, 1000]  # , 5000]:
-FILAS = [10, 20, 30, 60]
+PRE_LOADS = [0, 60, 150, 400, 1000]  # , 5000]:
+FILAS = [10, 20, 30, 45, 60]
 results = OrderedDict()
 for pre_load in PRE_LOADS:
     results[pre_load] = OrderedDict()
@@ -395,10 +420,10 @@ for pre_load in PRE_LOADS:
             ind = random.randint(0, len(lista_containers) - 1)
             numero = lista_containers.pop(ind)
             gerente.add_container(Container(numero))
-        for mode in [None, 'ordered']:
+        for mode in [None, 'ordered', 'stay']:
             print('Gerente criado: %s containers' % len(patio_carlo._containers))
             print('Gerente criado: %s pilhas' % len(patio_carlo._pilhas))
-            media_remocoes = test_gerente(gerente, mode, turns=100, fila=fila)
+            media_remocoes = test_gerente(gerente, mode, turns=1000, fila=fila)
             results[pre_load][fila][mode] = media_remocoes
             print('Gerente pos teste: %s containers' % len(patio_carlo._containers))
             print('Gerente pos teste: %s pilhas' % len(patio_carlo._pilhas))
@@ -423,15 +448,48 @@ print(Y)
 
 import matplotlib.pyplot as plt
 
-fig = plt.figure(figsize=(10,6))
+fig = plt.figure(figsize=(10, 6))
 for pre_load, y in Y.items():
     ax = fig.add_subplot(111)
     plt.plot(x, y, label='Preload de %s containers' % pre_load)
     for i, j in zip(x, y):
-        ax.annotate('{:00.02f} %'.format(j), xy=(i, j))
+        ax.annotate('{:00.02f} %'.format(j*100), xy=(i, j))
 plt.legend()
 plt.ylabel('Original / Ordenado')
 plt.xlabel('Tamanho da fila utilizada')
 plt.title('Percentual de remocões ordenando os caminhos')
 plt.show()
 
+
+
+x = FILAS
+Y = OrderedDict()
+for pre_load, pre_load_value in results.items():
+    y = []
+    for fila, fila_value in pre_load_value.items():
+        y_ = fila_value['stay'] / fila_value[None]
+        y.append(y_)
+        print(pre_load, fila,
+              '{:1.0f}'.format(fila_value[None]),
+              '{:1.0f}'.format(fila_value['stay']),
+              '{:02.4f}'.format(y_)
+              )
+    Y[pre_load] = y
+
+print(results)
+print(y)
+print(Y)
+
+import matplotlib.pyplot as plt
+
+fig = plt.figure(figsize=(10, 6))
+for pre_load, y in Y.items():
+    ax = fig.add_subplot(111)
+    plt.plot(x, y, label='Preload de %s containers' % pre_load)
+    for i, j in zip(x, y):
+        ax.annotate('{:00.02f} %'.format(j*100), xy=(i, j))
+plt.legend()
+plt.ylabel('Original / Ordenado')
+plt.xlabel('Tamanho da fila utilizada')
+plt.title('Percentual de remocões segurando para frente containers previstos')
+plt.show()
