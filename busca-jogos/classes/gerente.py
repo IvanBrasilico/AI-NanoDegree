@@ -9,8 +9,8 @@ class GerenteRemocao:
     def pilha_mesmo_tempo(self, container):
         tempo = container.time_to_leave
         # print(self._patio._pilhas)
-        means = sorted([(abs(pilha.time_mean() - tempo), pilha) for pilha in self._patio._pilhas.values()])
-        print(means)
+        means = sorted([(abs(pilha.time_mean() - tempo), pilha) for pilha in self._patio.pilhas_com_espaco()])
+        # print(means)
         if means:
             return means[0][1]
         return None

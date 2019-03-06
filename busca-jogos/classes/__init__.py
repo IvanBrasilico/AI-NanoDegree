@@ -1,6 +1,6 @@
 
 
+ALTURAS = '12345'
 COLUNAS = 'ABCDEF'
 PILHAS = 'abcde'
-ALTURAS = '12345'
 

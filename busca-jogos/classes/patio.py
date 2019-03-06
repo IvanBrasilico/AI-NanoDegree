@@ -10,7 +10,6 @@ class Container():
 
     @property
     def time_to_leave(self):
-        # TODO: implement time regressor
         return self._time_to_leave
 
     @time_to_leave.setter
@@ -112,6 +111,26 @@ class Pilha():
                     return coluna, altura
         return False, False
 
+    def is_acessible(self, coluna, altura):
+        up = str(int(altura) + 1)
+        down = str(int(altura) - 1)
+        col_right = COLUNAS.find(coluna) + 1
+        col_left = COLUNAS.find(coluna) - 1
+        if (col_left > 0) and (col_right < len(COLUNAS)):
+            if self._pilha[col_right].get(up) is not None or \
+                    self._pilha[col_left].get(up) is not None:
+                print('Lados ocupados!!!')
+                return False
+        if self._pilha[coluna].get(up) is not None:
+            print('Em cima ocupado!!!')
+            return False
+        if int(down) > 0 and self._pilha[coluna].get(down) is None:
+            print('Embaixo vazio!!!')
+            return False
+        print(self._pilha[coluna].get(down))
+        print(col_left, col_right, coluna, altura, up, down)
+        return True
+
     def is_position_free(self, position=None):
         """Retorna posicao se livre, senao None
 
@@ -120,18 +139,28 @@ class Pilha():
         """
         if position:
             coluna, altura = self.position_totuple(position)
-            if self._pilha[coluna][altura] is None:
+            print(coluna, altura)
+            if self._pilha[coluna][altura] is None and \
+                self.is_acessible(coluna, altura):
                 return coluna, altura
+            return False, False
         else:
             return self.first_free_position()
 
-    def stack(self, container, position):
-        coluna, altura = self.is_position_locked(position)
-        
+    def stack(self, container, position=None):
+        coluna, altura = self.is_position_free(position)
+        print(coluna, altura, position, container)
         if coluna:
             self._pilha[coluna][altura] = container
             return coluna + altura
         return False
+
+    def has_space(self):
+        for coluna in COLUNAS:
+            for altura in ALTURAS:
+                if self._pilha[coluna][altura] != None:
+                    return False
+        return True
 
 
 class Patio():
@@ -209,3 +238,10 @@ class Patio():
 
     def remove_position(self, nome_pilha, position, container):
         return self.unstack(nome_pilha, position, container)
+
+    def pilhas_com_espaco(self):
+        result = []
+        for pilha in self._pilhas.values():
+            if pilha.has_space():
+                result.add(pilha)
+        return result
