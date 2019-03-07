@@ -116,8 +116,8 @@ class Pilha():
         if int(down) > 0 and self._pilha[coluna].get(down) is None:
             print('Embaixo vazio!!!')
             return False
-        print(self._pilha[coluna].get(down))
-        print(col_left, col_right, coluna, altura, up, down)
+        # print(self._pilha[coluna].get(down))
+        # print(col_left, col_right, coluna, altura, up, down)
         return True
 
     def is_position_free(self, position=None):
@@ -128,7 +128,7 @@ class Pilha():
         """
         if position:
             coluna, altura = self.position_totuple(position)
-            print(coluna, altura)
+            # print(coluna, altura)
             if self._pilha[coluna][altura] is None and \
                     self.is_acessible(coluna, altura):
                 return coluna, altura

@@ -1,16 +1,21 @@
+from collections import defaultdict
+from random import randint
+
+import numpy as np
+
+from busca.classes.patio import Container
+
 NCONTAINERS = 20000
 
+
 def gera_containers_transito(n=NCONTAINERS):
-    tempos =  np.random.normal(20, 5, NCONTAINERS)
+    tempos = np.random.normal(20, 5, NCONTAINERS)
     containers_transito = [Container('{:05d}'.format(numero), tempos[i])
-                       for i, numero in enumerate(range(1, NCONTAINERS))]
+                           for i, numero in enumerate(range(1, NCONTAINERS))]
     return containers_transito
-def gera_containers_transito(n=NCONTAINERS):
-    tempos =  np.random.normal(20, 5, NCONTAINERS)
-    containers_transito = [Container('{:05d}'.format(numero), tempos[i])
-                       for i, numero in enumerate(range(1, NCONTAINERS))]
-    return containers_transito
-def gera_agendamento_containers(containers_transito, dias=30, qtdedia=200, erro=2):
+
+
+def gera_agendamento_containers(containers_transito, dias=30, qtdedia=100, erro=2):
     agendamentos = defaultdict(list)
     container_por_tempo = defaultdict(list)
     for c in containers_transito:
@@ -24,3 +29,6 @@ def gera_agendamento_containers(containers_transito, dias=30, qtdedia=200, erro=
                 if container_transito:
                     agendamentos[dia].append(container_transito)
     return agendamentos
+
+
+

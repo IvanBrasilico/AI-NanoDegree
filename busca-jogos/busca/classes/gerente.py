@@ -43,11 +43,15 @@ class GerenteRemocao:
         return caminho
 
     def processa_fila_gatein(self, fila, mode=None):
+        posicoes = []
         for container in fila:
-            pilha_nome = None
+            nome_pilha = None
             if mode == 'like':
-                pilha_nome = self.pilha_mesmo_tempo(container)
-            posicao = self.add_container(container)
+                pilha = self.pilha_mesmo_tempo(container)
+                if pilha:
+                    nome_pilha = pilha._nome
+            posicoes.append(self.add_container(container, nome_pilha))
+        return posicoes
 
     def processa_fila_gateout(self, fila, mode=None):
         totalremocoes = 0
@@ -55,23 +59,24 @@ class GerenteRemocao:
         for container in fila:
             caminho = self.monta_caminho_remocao(container._numero)
             caminhos.append((len(caminho), container._numero))
-        if mode == 'ordered':
+        if  mode and 'ordered' in mode:
             caminhos = sorted(caminhos, key=lambda x: x[0])
         for _, numero in caminhos:
             caminho2 = self.remove_caminho(numero)
-            totalremocoes += len(caminho2)
-            del caminho2[-1]  # Elimina container entregue
-            # Algoritmo stay - colocar conteiners previstos "por cima"
-            if mode == 'stay':
-                filaum = []
-                filadois = []
+            if caminho2:
+                totalremocoes += len(caminho2)
+                del caminho2[-1]  # Elimina container entregue
+                # Algoritmo stay - colocar conteiners previstos "por cima"
+                if mode and 'stay' in mode:
+                    filaum = []
+                    filadois = []
+                    for container in caminho2:
+                        if container in fila:
+                            filadois.append(container)
+                        else:
+                            filaum.append(container)
+                    caminho2 = [*filaum, *filadois]
+                # Recolocar containers
                 for container in caminho2:
-                    if container in fila:
-                        filadois.pop(container)
-                    else:
-                        filaum.append(container)
-                caminho_limpo = [*filaum, *filadois]
-            # Recolocar containers
-            for container in caminho2:
-                self.add_container(container)
+                    self.add_container(container)
         return totalremocoes
