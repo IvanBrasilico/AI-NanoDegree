@@ -1,5 +1,6 @@
-from classes import ALTURAS, COLUNAS
-from classes.patio import Patio
+from busca.classes import ALTURAS, COLUNAS
+from busca.classes.patio import Patio
+
 
 class GerenteRemocao:
 
@@ -46,20 +47,20 @@ class GerenteRemocao:
             pilha_nome = None
             if mode == 'like':
                 pilha_nome = self.pilha_mesmo_tempo(container)
-            posicao = gerente.add_container(container)
+            posicao = self.add_container(container)
 
     def processa_fila_gateout(self, fila, mode=None):
         totalremocoes = 0
         caminhos = []
         for container in fila:
-            caminho = gerente.monta_caminho_remocao(numero)
-            caminhos.append((len(caminho), numero))
+            caminho = self.monta_caminho_remocao(container._numero)
+            caminhos.append((len(caminho), container._numero))
         if mode == 'ordered':
             caminhos = sorted(caminhos, key=lambda x: x[0])
         for _, numero in caminhos:
-            caminho2 = gerente.remove_caminho(numero)
+            caminho2 = self.remove_caminho(numero)
             totalremocoes += len(caminho2)
-            del caminho2[-1] # Elimina container entregue
+            del caminho2[-1]  # Elimina container entregue
             # Algoritmo stay - colocar conteiners previstos "por cima"
             if mode == 'stay':
                 filaum = []
@@ -72,5 +73,5 @@ class GerenteRemocao:
                 caminho_limpo = [*filaum, *filadois]
             # Recolocar containers
             for container in caminho2:
-                gerente.add_container(container)
+                self.add_container(container)
         return totalremocoes

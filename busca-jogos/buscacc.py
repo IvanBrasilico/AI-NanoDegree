@@ -2,8 +2,8 @@ import random
 from collections import OrderedDict
 from pprint import pprint
 
-from classes.patio import Container, Patio, Pilha
-from classes.gerente import GerenteRemocao
+from busca.classes import Container, Patio
+from busca.classes import GerenteRemocao
 
 def busca_acima(posicoes, stack, posicao=None, conteiner=None):
     if posicao is None:

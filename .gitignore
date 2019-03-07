@@ -6,3 +6,4 @@ __pycache__
 */busca-venv/*
 .idea/*
 .eggs/*
+.tox/*

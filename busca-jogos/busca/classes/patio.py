@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from classes import ALTURAS, COLUNAS
+from busca.classes import ALTURAS, COLUNAS
 
 
 class Container():
@@ -35,18 +35,6 @@ class Pilha():
                     self._pilha[coluna] = OrderedDict()
                 self._pilha[coluna][altura] = None
 
-    def time_mean(self):
-        soma = 0
-        qtde = 0
-        for coluna in self._pilha.values():
-            for container in coluna.values():
-                if container:
-                    soma += container.time_to_leave
-                    qtde += 1
-        if qtde == 0:
-            return 0
-        return soma / qtde
-
     def position_totuple(self, position):
         coluna = None
         altura = None
@@ -79,6 +67,18 @@ class Pilha():
                 return True
         return False
 
+    def time_mean(self):
+        soma = 0
+        qtde = 0
+        for coluna in self._pilha.values():
+            for container in coluna.values():
+                if container:
+                    soma += container.time_to_leave
+                    qtde += 1
+        if qtde == 0:
+            return 0
+        return soma / qtde
+
     def is_position_locked(self, position):
         """Retorna posicao se livre, senao None
 
@@ -92,17 +92,6 @@ class Pilha():
                         self.side_locked(coluna, altura)):
                     return coluna, altura
         return False, False
-
-    def remove(self, position, container):
-        coluna, altura = self.is_position_locked(position)
-        # print(coluna, altura)
-        if coluna:
-            stacked_container = self._pilha[coluna][altura]
-            # print(stacked_container)
-            if stacked_container == container:
-                self._pilha[coluna][altura] = None
-                return True
-        return False
 
     def first_free_position(self):
         for coluna in COLUNAS:
@@ -141,15 +130,26 @@ class Pilha():
             coluna, altura = self.position_totuple(position)
             print(coluna, altura)
             if self._pilha[coluna][altura] is None and \
-                self.is_acessible(coluna, altura):
+                    self.is_acessible(coluna, altura):
                 return coluna, altura
             return False, False
         else:
             return self.first_free_position()
 
+    def remove(self, position, container):
+        coluna, altura = self.is_position_locked(position)
+        # print(coluna, altura)
+        if coluna:
+            stacked_container = self._pilha[coluna][altura]
+            # print(stacked_container)
+            if stacked_container == container:
+                self._pilha[coluna][altura] = None
+                return True
+        return False
+
     def stack(self, container, position=None):
         coluna, altura = self.is_position_free(position)
-        print(coluna, altura, position, container)
+        # print(coluna, altura, position, container)
         if coluna:
             self._pilha[coluna][altura] = container
             return coluna + altura
@@ -158,9 +158,9 @@ class Pilha():
     def has_space(self):
         for coluna in COLUNAS:
             for altura in ALTURAS:
-                if self._pilha[coluna][altura] != None:
-                    return False
-        return True
+                if self._pilha[coluna][altura] == None:
+                    return True
+        return False
 
 
 class Patio():
@@ -174,11 +174,13 @@ class Patio():
         self._pilhas[nome_pilha] = Pilha(nome_pilha)
 
     def stack(self, container, nome_pilha, posicao=None):
-        pilha = self._pilhas[nome_pilha]
-        posicao = pilha.stack(container, posicao)
-        if posicao:
-            self._containers[container._numero] = (nome_pilha, posicao, container)
-        return posicao
+        pilha = self._pilhas.get(nome_pilha)
+        if pilha:
+            posicao = pilha.stack(container, posicao)
+            if posicao:
+                self._containers[container._numero] = (nome_pilha, posicao, container)
+            return posicao
+        return False
 
     def unstack(self, nome_pilha, position, container):
         pilha = self._pilhas.get(nome_pilha)
@@ -243,5 +245,5 @@ class Patio():
         result = []
         for pilha in self._pilhas.values():
             if pilha.has_space():
-                result.add(pilha)
+                result.append(pilha)
         return result
