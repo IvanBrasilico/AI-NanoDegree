@@ -45,17 +45,6 @@ class Simulador:
         totalgeral = 0
         totalgatein = totalgateout = 0
         for turn in range(self.turns):
-            # GATE-IN
-            fila_in = []
-            for ccs_gate_in in range(self.tamanho_fila):
-                totalgatein += 1
-                random_ind = randint(0, len(self.containers_transito) - 1)
-                cc_in = self.containers_transito.pop(random_ind)
-                fila_in.append(cc_in)
-                self.containers_agendados[int(cc_in.time_to_leave)].append(cc_in)
-
-            self.gerente.processa_fila_gatein(fila_in, mode=mode_in)
-
             # GATE-OUT
             fila_out = []
             random_dia = randint(0, len(self.containers_agendados.keys()))
@@ -74,7 +63,18 @@ class Simulador:
                     fila_out.append(containers_dentro.pop(random_ind))
                 totalremocoes = self.gerente.processa_fila_gateout(fila_out, mode=mode_out)
                 self.containers_transito.extend(fila_out)
+                for cc_out in fila_out:
+                    self.containers_agendados[int(cc_out.time_to_leave)].append(cc_out)
                 totalgeral += totalremocoes / len(fila_out)
+            # GATE-IN
+            # Entrar somente o que conseguiu sair, usando len(fila_out)
+            fila_in = []
+            for ccs_gate_in in range(len(fila_out)):
+                totalgatein += 1
+                random_ind = randint(0, len(self.containers_transito) - 1)
+                cc_in = self.containers_transito.pop(random_ind)
+                fila_in.append(cc_in)
+            self.gerente.processa_fila_gatein(fila_in, mode=mode_in)
         print('Média de remoções: %s' % (totalgeral / self.turns))
         print('Total gatein: %s gateout:%s' % (totalgatein, totalgateout))
         return totalgeral / self.turns
