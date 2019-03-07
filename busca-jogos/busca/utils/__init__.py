@@ -29,6 +29,3 @@ def gera_agendamento_containers(containers_transito, dias=30, qtdedia=100, erro=
                 if container_transito:
                     agendamentos[dia].append(container_transito)
     return agendamentos
-
-
-
