@@ -31,10 +31,12 @@ class Simulador:
                     break
         return self.containers_transito, self.containers_agendados, self.pre_load
 
-    def initialize_gerente(self, mode):
-        if mode is None:
+    def initialize_gerente(self, mode=None):
+        if mode is None or mode == 'nenhum':
             load = sample(self.pre_load, len(self.pre_load))
+            print('Modo nenhum')
         else:
+            print('Modo like')
             load = copy(self.pre_load)
         self.gerente = GerenteRemocao(Patio())
         self.gerente.processa_fila_gatein(load, mode)
@@ -72,8 +74,7 @@ class Simulador:
                     fila_out.append(containers_dentro.pop(random_ind))
                 totalremocoes = self.gerente.processa_fila_gateout(fila_out, mode=mode_out)
                 self.containers_transito.extend(fila_out)
-                totalgeral += totalremocoes
-        print('Média de remoções: %s' % (totalgeral / (turn + 1)))
+                totalgeral += totalremocoes / len(fila_out)
+        print('Média de remoções: %s' % (totalgeral / self.turns))
         print('Total gatein: %s gateout:%s' % (totalgatein, totalgateout))
-        print('Média de remoções ponderada: %s' % (totalgeral / totalgateout))
-        return totalgeral / self.turns, totalgeral / totalgateout
+        return totalgeral / self.turns

@@ -68,14 +68,14 @@ class GerenteRemocao:
                 del caminho2[-1]  # Elimina container entregue
                 # Algoritmo stay - colocar conteiners previstos "por cima"
                 if mode and 'stay' in mode:
-                    filaum = []
-                    filadois = []
-                    for container in caminho2:
-                        if container in fila:
-                            filadois.append(container)
-                        else:
-                            filaum.append(container)
-                    caminho2 = [*filaum, *filadois]
+                    caminho_stay = []
+                    for container in reversed(fila):
+                        try:
+                            ind = caminho2.index(container)
+                            caminho_stay.append(caminho2.pop(ind))
+                        except IndexError:
+                            pass
+                    caminho2.extend(caminho_stay)
                 # Recolocar containers
                 for container in caminho2:
                     self.add_container(container)
