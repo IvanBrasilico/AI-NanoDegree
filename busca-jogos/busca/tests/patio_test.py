@@ -48,8 +48,7 @@ class TestPilha(unittest.TestCase):
         coluna, altura = p.position_totuple(position1)
         locked = p.side_locked(coluna, altura)
         assert locked is True
-        coluna, altura = p.position_totuple(position2)
-        locked = p.side_locked(coluna, altura)
+        locked = p.side_locked_position(position2)
         assert locked is False
 
     def test_up_locked(self):
@@ -59,8 +58,7 @@ class TestPilha(unittest.TestCase):
         coluna, altura = p.position_totuple(position1)
         locked = p.up_locked(coluna, altura)
         assert locked is True
-        coluna, altura = p.position_totuple(position2)
-        locked = p.up_locked(coluna, altura)
+        locked = p.up_locked_position(position2)
         assert locked is False
 
     def test_posicao_inexistente(self):
@@ -79,6 +77,29 @@ class TestPilha(unittest.TestCase):
         p.stack(self.c1)
         p.stack(self.c2)
         assert p.time_mean() == (self.c1.time_to_leave + self.c2.time_to_leave) / 2
+        p = Pilha('TESTE')
+        for i in range(30):
+            p.stack(self.c1)
+        assert p.time_mean() == self.c1.time_to_leave
+
+    def test_is_position_free(self):
+        p = Pilha('TESTE')
+        assert p.is_position_free('A1')
+        position = p.stack(self.c1)
+        assert p.is_position_free(position) == (False, False)
+        position = p.stack(self.c2)
+        assert p.is_position_free(position) == (False, False)
+        p.remove(position, self.c2)
+        assert p.is_position_free(position)
+
+    def test_first_free_position(self):
+        p = Pilha('TESTE')
+        position = p.first_free_position()
+        assert position == ('A', '1')
+        position = p.stack(self.c1, position)
+        position2 = p.first_free_position()
+        assert position != position2
+
 
     def test_remove(self):
         p = Pilha('TESTE')
@@ -117,6 +138,11 @@ class TestPatio(unittest.TestCase):
         self.c2 = Container('002', 3)
         self.patio = Patio('TESTE')
 
+    def tearDown(self):
+        del self.c1
+        del self.c2
+        del self.patio
+
     def test_Patio(self):
         assert self.patio._nome == 'TESTE'
         assert isinstance(self.patio._pilhas, dict)
@@ -143,8 +169,47 @@ class TestPatio(unittest.TestCase):
         assert posicao is False
 
 
+    def test_unstack(self):
+        self.test_add_pilha()
+        posicao = self.patio.stack(self.c1, 'P01')
+        pilha = self.patio._pilhas['P01']
+        coluna, altura = pilha.position_totuple(posicao)
+        assert isinstance(pilha._pilha[coluna][altura], Container)
+        assert pilha._pilha[coluna][altura]._numero == '001'
+        self.patio.unstack(self.c1, 'P01')
+        pilha = self.patio._pilhas['P01']
+        coluna, altura = pilha.position_totuple(posicao)
+        assert isinstance(pilha._pilha[coluna][altura], Container)
+        assert pilha._pilha[coluna][altura]._numero == '001'
+
+    def test_add_container(self):
+        self.c1 = Container('001', 1)
+        self.c2 = Container('002', 3)
+        self.patio = Patio('TESTE')
+        posicao = self.patio.add_container(self.c1)
+        pilha = self.patio._pilhas.get('0001')
+        assert pilha is not None
+        coluna, altura = pilha.position_totuple(posicao)
+        assert isinstance(pilha._pilha[coluna][altura], Container)
+        assert pilha._pilha[coluna][altura]._numero == '001'
+        for i in range(29):
+            posicao = self.patio.add_container(self.c1)
+            coluna, altura = pilha.position_totuple(posicao)
+            assert isinstance(pilha._pilha[coluna][altura], Container)
+            assert pilha._pilha[coluna][altura]._numero == '001'
+        # Pilha cheia, cria nova
+        posicao = self.patio.add_container(self.c2)
+        pilha = self.patio._pilhas.get('0002')
+        assert pilha is not None
+        coluna, altura = pilha.position_totuple(posicao)
+        assert isinstance(pilha._pilha[coluna][altura], Container)
+        assert pilha._pilha[coluna][altura]._numero == '002'
+
+
 if __name__ == '__main__':
     import timeit
+    from time import time
+    s0 = time()
     all_times = []
     for classe in [TestContainer, TestPatio, TestPilha]:
         functions = [func for func in dir(classe) if 'test_' in func]
@@ -162,8 +227,10 @@ test.setUp()
                                   globals=globals())
             all_times.append((
                 min(times),
-                f'Time {classe.__name__} {function} {min(times)}'
+                f'Time {classe.__name__} {function} {min(times):0.4f}'
             ))
+    s1 = time()
     for time, descricao in sorted(
             all_times, key=lambda x: x[0]):
         print(descricao)
+    print(f'Tempo total {s1-s0:0.2f}')

@@ -1,5 +1,7 @@
 from collections import OrderedDict
 
+import numpy as np
+
 from busca.classes import ALTURAS, COLUNAS
 
 
@@ -31,10 +33,13 @@ class Pilha():
         self._nome = nome
         self._altura = altura
         self._largura = largura
+        self._capacity = self._altura * self._largura
         for coluna in COLUNAS:
             self._pilha[coluna] = OrderedDict()
             for altura in ALTURAS:
                 self._pilha[coluna][altura] = None
+        self._pilhanp = np.zeros((self._largura, self._altura),
+                                 dtype=np.float32)
 
     def position_totuple(self, position):
         coluna = None
@@ -70,7 +75,7 @@ class Pilha():
             coluna = COLUNAS[ind_coluna]
             altura = ALTURAS[ind_alt]
             if self._pilha[coluna][altura] is not None:
-                return True
+                 return True
         return False
 
     def up_locked(self, pcoluna, paltura):
@@ -83,19 +88,11 @@ class Pilha():
         return False
 
     def time_mean(self):
-        soma = 0
-        qtde = 0
-        for coluna in self._pilha.values():
-            for container in coluna.values():
-                if container:
-                    soma += container.time_to_leave
-                    qtde += 1
-        if qtde == 0:
-            return 0
-        return soma / qtde
+        return self._pilhanp.sum() / np.count_nonzero(self._pilhanp)
 
     def is_position_locked(self, position):
         """Retorna posicao se livre, senao None
+
         :param posicao: String 'coluna'+'altura'. Caso nao passada,
         retorna primeira livre
         """
@@ -108,11 +105,17 @@ class Pilha():
         return False, False
 
     def first_free_position(self):
+        '''
         for coluna in COLUNAS:
             for altura in ALTURAS:
                 if self._pilha[coluna][altura] == None:
                     return coluna, altura
         return False, False
+        '''
+        zero_inds = np.where(self._pilhanp == 0)
+        if zero_inds[0].size == 0:
+            return False, False
+        return COLUNAS[zero_inds[0][0]], ALTURAS[zero_inds[1][0]]
 
     def is_acessible(self, coluna, altura):
         up = str(int(altura) + 1)
@@ -136,11 +139,13 @@ class Pilha():
 
     def is_position_free(self, position=None):
         """Retorna posicao se livre, senao None
+
         :param posicao: String 'coluna'+'altura'. Caso nao passada,
         retorna primeira livre
         """
         if position:
             coluna, altura = self.position_totuple(position)
+            # print(coluna, altura)
             if self._pilha[coluna][altura] is None and \
                     self.is_acessible(coluna, altura):
                 return coluna, altura
@@ -148,17 +153,26 @@ class Pilha():
         else:
             return self.first_free_position()
 
-    def remove(self, position, container):
-        coluna, altura = self.is_position_locked(position)
-        if coluna:
-            stacked_container = self._pilha[coluna][altura]
-            if stacked_container == container:
-                self._pilha[coluna][altura] = None
-                return True
+    def has_space(self):
+        '''
+        for coluna in COLUNAS:
+            for altura in ALTURAS:
+                if self._pilha[coluna][altura] == None:
+                    return True
         return False
+        '''
+        zero_inds = np.where(self._pilhanp == 0)
+        return zero_inds[0].size !=0
 
     def _atualiza_posicao(self, coluna, altura, container):
         self._pilha[coluna][altura] = container
+        if container is None:
+            time_to_leave = 0
+        else:
+            time_to_leave = container.time_to_leave
+        ind_coluna = COLUNAS.find(coluna)
+        ind_altura = ALTURAS.find(altura)
+        self._pilhanp[ind_coluna, ind_altura] = time_to_leave
 
     def remove(self, position, container):
         coluna, altura = self.is_position_locked(position)
@@ -179,20 +193,6 @@ class Pilha():
             return coluna + altura
         return False
 
-    def stack(self, container, position=None):
-        coluna, altura = self.is_position_free(position)
-        if coluna:
-            self._pilha[coluna][altura] = container
-            return coluna + altura
-        return False
-
-    def has_space(self):
-        for coluna in COLUNAS:
-            for altura in ALTURAS:
-                if self._pilha[coluna][altura] == None:
-                    return True
-        return False
-
 
 class Patio():
     def __init__(self, nome=''):
@@ -204,16 +204,16 @@ class Patio():
     def add_pilha(self, nome_pilha=None):
         self._pilhas[nome_pilha] = Pilha(nome_pilha)
 
-    def stack(self, container, nome_pilha=None, position=None):
+    def stack(self, container, nome_pilha, posicao=None):
         pilha = self._pilhas.get(nome_pilha)
         if pilha:
-            position = pilha.stack(container, position)
-            if position:
-                self._containers[container._numero] = (nome_pilha, position, container)
-            return position
+            posicao = pilha.stack(container, posicao)
+            if posicao:
+                self._containers[container._numero] = (nome_pilha, posicao, container)
+            return posicao
         return False
 
-    def unstack(self, container, nome_pilha=None, position=None):
+    def unstack(self, nome_pilha, position, container):
         pilha = self._pilhas.get(nome_pilha)
         if pilha:
             sucess = pilha.remove(position, container)
@@ -225,7 +225,9 @@ class Patio():
 
     def add_container(self, container, nome_pilha=None, posicao=None):
         """Adiciona container na pilha, ou no pátio.
+
         Retorna None se pilha cheia ou pátio cheio.
+
         :param container: Objeto Container
         :param nome_pilha: Nome da pilha a utilizar.
         Se não passado, procura em todas
