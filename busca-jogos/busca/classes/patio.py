@@ -1,5 +1,7 @@
 from collections import OrderedDict
 
+import numpy as np
+
 from busca.classes import ALTURAS, COLUNAS
 
 
@@ -26,14 +28,18 @@ class Container():
 class Pilha():
     """Define uma pilha de largura [A-E] e altura [0-7]"""
 
-    def __init__(self, nome):
+    def __init__(self, nome, altura=len(ALTURAS), largura=len(COLUNAS)):
         self._pilha = OrderedDict()
         self._nome = nome
+        self._altura = altura
+        self._largura = largura
+        self._capacity = self._altura * self._largura
         for coluna in COLUNAS:
+            self._pilha[coluna] = OrderedDict()
             for altura in ALTURAS:
-                if self._pilha.get(coluna) is None:
-                    self._pilha[coluna] = OrderedDict()
                 self._pilha[coluna][altura] = None
+        self._pilhanp = np.zeros((self._largura, self._altura),
+                                 dtype=np.float32)
 
     def position_totuple(self, position):
         coluna = None
@@ -51,6 +57,10 @@ class Pilha():
             return self._pilha[coluna][altura]
         return None
 
+    def side_locked(self, position):
+        coluna, altura = self.position_totuple(position)
+        return self.side_locked(coluna, altura)
+
     def side_locked(self, pcoluna, paltura):
         firstcol = COLUNAS.find(pcoluna)
         firstheight = ALTURAS.find(paltura)
@@ -59,6 +69,10 @@ class Pilha():
                 if self._pilha[coluna][altura] is not None:
                     return True
         return False
+
+    def up_locked(self, position):
+        coluna, altura = self.position_totuple(position)
+        return self.up_locked(coluna, altura)
 
     def up_locked(self, pcoluna, paltura):
         firstheight = ALTURAS.find(paltura)
@@ -136,6 +150,23 @@ class Pilha():
         else:
             return self.first_free_position()
 
+    def has_space(self):
+        for coluna in COLUNAS:
+            for altura in ALTURAS:
+                if self._pilha[coluna][altura] == None:
+                    return True
+        return False
+
+    def _atualiza_posicao(self, coluna, altura, container):
+        self._pilha[coluna][altura] = container
+        if container is None:
+            time_to_leave = 0
+        else:
+            time_to_leave = container.time_to_leave
+        ind_coluna = COLUNAS.find(coluna)
+        ind_altura = ALTURAS.find(altura)
+        self._pilhanp[ind_coluna, ind_altura] = time_to_leave
+
     def remove(self, position, container):
         coluna, altura = self.is_position_locked(position)
         # print(coluna, altura)
@@ -143,7 +174,7 @@ class Pilha():
             stacked_container = self._pilha[coluna][altura]
             # print(stacked_container)
             if stacked_container == container:
-                self._pilha[coluna][altura] = None
+                self._atualiza_posicao(coluna, altura, None)
                 return True
         return False
 
@@ -151,15 +182,8 @@ class Pilha():
         coluna, altura = self.is_position_free(position)
         # print(coluna, altura, position, container)
         if coluna:
-            self._pilha[coluna][altura] = container
+            self._atualiza_posicao(coluna, altura, container)
             return coluna + altura
-        return False
-
-    def has_space(self):
-        for coluna in COLUNAS:
-            for altura in ALTURAS:
-                if self._pilha[coluna][altura] == None:
-                    return True
         return False
 
 
