@@ -145,16 +145,6 @@ class TestPatio(unittest.TestCase):
 
 if __name__ == '__main__':
     import timeit
-
-    setup_code = 'test = TestContainer()'
-    test_code = 'test.test_container()'
-
-    times = timeit.repeat(setup=setup_code,
-                          stmt=test_code,
-                          repeat=3,
-                          number=100,
-                          globals=globals())
-    print('Time: {}'.format(min(times)))
     all_times = []
     for classe in [TestContainer, TestPatio, TestPilha]:
         functions = [func for func in dir(classe) if 'test_' in func]
