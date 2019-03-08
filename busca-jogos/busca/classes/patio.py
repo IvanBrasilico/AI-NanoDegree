@@ -108,13 +108,13 @@ class Pilha():
         if (col_left > 0) and (col_right < len(COLUNAS)):
             if self._pilha[col_right].get(up) is not None or \
                     self._pilha[col_left].get(up) is not None:
-                print('Lados ocupados!!!')
+                # print('Lados ocupados!!!')
                 return False
         if self._pilha[coluna].get(up) is not None:
-            print('Em cima ocupado!!!')
+            # print('Em cima ocupado!!!')
             return False
         if int(down) > 0 and self._pilha[coluna].get(down) is None:
-            print('Embaixo vazio!!!')
+            # print('Embaixo vazio!!!')
             return False
         # print(self._pilha[coluna].get(down))
         # print(col_left, col_right, coluna, altura, up, down)

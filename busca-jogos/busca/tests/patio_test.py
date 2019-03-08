@@ -71,7 +71,7 @@ class TestPilha(unittest.TestCase):
     def test_posicao_invalida(self):
         p = Pilha('TESTE')
         position = p.stack(self.c1, 'A2')
-        print(position)
+        # print(position)
         assert position is False
 
     def test_time_mean(self):
@@ -141,3 +141,39 @@ class TestPatio(unittest.TestCase):
         # Posicao ocupada
         posicao = self.patio.stack(self.c1, 'P01', 'A1')
         assert posicao is False
+
+
+if __name__ == '__main__':
+    import timeit
+
+    setup_code = 'test = TestContainer()'
+    test_code = 'test.test_container()'
+
+    times = timeit.repeat(setup=setup_code,
+                          stmt=test_code,
+                          repeat=3,
+                          number=100,
+                          globals=globals())
+    print('Time: {}'.format(min(times)))
+    all_times = []
+    for classe in [TestContainer, TestPatio, TestPilha]:
+        functions = [func for func in dir(classe) if 'test_' in func]
+        for function in functions:
+            # print(f'classe:{classe.__name__} function:{function}')
+            setup_code = f'''
+test = {classe.__name__}()
+test.setUp()
+            '''
+            test_code = f'test.{function}()'
+            times = timeit.repeat(setup=setup_code,
+                                  stmt=test_code,
+                                  repeat=3,
+                                  number=1000,
+                                  globals=globals())
+            all_times.append((
+                min(times),
+                f'Time {classe.__name__} {function} {min(times)}'
+            ))
+    for time, descricao in sorted(
+            all_times, key=lambda x: x[0]):
+        print(descricao)
