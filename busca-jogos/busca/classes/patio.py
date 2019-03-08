@@ -151,11 +151,14 @@ class Pilha():
             return self.first_free_position()
 
     def has_space(self):
+        '''
         for coluna in COLUNAS:
             for altura in ALTURAS:
                 if self._pilha[coluna][altura] == None:
                     return True
         return False
+        '''
+        return np.count_nonzero(self._pilhanp) < self._capacity
 
     def _atualiza_posicao(self, coluna, altura, container):
         self._pilha[coluna][altura] = container
