@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
 from busca.classes import ALTURAS, COLUNAS
+from busca.utils.logconf import logger
 
 colunas_dict = {k: ind for ind, k in enumerate(COLUNAS)}
 alturas_dict = {k: ind for ind, k in enumerate(ALTURAS)}
@@ -20,6 +21,9 @@ class Container():
         self._time_to_leave = time_to_leave
 
     def __str__(self):
+        return self._numero
+
+    def __repr__(self):
         return self._numero
 
 
@@ -62,10 +66,6 @@ class Pilha():
         coluna, altura = self.position_totuple(position)
         return self.side_locked(coluna, altura)
 
-    def up_locked_position(self, position):
-        coluna, altura = self.position_totuple(position)
-        return self.up_locked(coluna, altura)
-
     def side_locked(self, pcoluna, paltura):
         ind_col = colunas_dict[pcoluna]
         ind_alt = alturas_dict[paltura]
@@ -82,11 +82,14 @@ class Pilha():
                 sides_locked.add(Pilha.LEFT)
         return sides_locked
 
+    def up_locked_position(self, position):
+        coluna, altura = self.position_totuple(position)
+        return self.up_locked(coluna, altura)
+
     def up_locked(self, pcoluna, paltura):
-        print(paltura)
         ind_alt = alturas_dict[paltura]
         if ind_alt == len(ALTURAS) - 1:
-            return False
+            return True
         altura = ALTURAS[ind_alt + 1]
         if self._pilha[pcoluna][altura] is not None:
             return True
@@ -104,7 +107,7 @@ class Pilha():
             return 0
         return soma / qtde
 
-    def is_locked(self, coluna, altura):
+    def sides_locked(self, coluna, altura):
         """Retorna posicoes livres se tem carga na posicao, senao True
         :param posicao: String 'coluna'+'altura'. Caso nao passada,
         retorna primeira livre
@@ -118,6 +121,12 @@ class Pilha():
                 sides_free.remove(sides_locked)
         return sides_free
 
+    def is_locked(self, coluna, altura):
+        if self.up_locked(coluna, altura) or \
+                self.sides_locked(coluna, altura) == {Pilha.LEFT, Pilha.RIGHT}:
+            return True
+        return False
+
     def is_position_locked(self, position):
         coluna, altura = self.position_totuple(position)
         return self.is_locked(coluna, altura)
@@ -127,24 +136,30 @@ class Pilha():
         ind_alt = alturas_dict[altura]
         if ind_alt == len(ALTURAS) - 1:
             return False
+        up = ALTURAS[ind_alt + 1]
+        if ind_alt == 0:
+            down = -1
         else:
-            up = ind_alt + 1
-        down = ind_alt - 1
+            down = ALTURAS[ind_alt - 1]
         col_right = colunas_dict[coluna] + 1
         col_left = colunas_dict[coluna] - 1
-        if (col_left > 0) and (col_right < len(COLUNAS)):
-            if self._pilha[col_right].get(up) is not None or \
-                    self._pilha[col_left].get(up) is not None:
-                # print('Lados ocupados!!!')
+        # print(up, down, col_left, col_right)
+        if (col_left > 0):
+            left = COLUNAS[col_left]
+            if self._pilha[col_left].get(up) is not None:
+                logger.debug('Lado esquerdo ocupado!!!')
+                return False
+        if (col_right < len(COLUNAS)):
+            right = COLUNAS[col_right]
+            if self._pilha[right].get(up) is not None:
+                logger.debug('Lado direito ocupado!!!')
                 return False
         if self._pilha[coluna].get(up) is not None:
-            # print('Em cima ocupado!!!')
+            logger.debug('Em cima ocupado!!!')
             return False
-        if int(down) > 0 and self._pilha[coluna].get(down) is None:
-            # print('Embaixo vazio!!!')
+        if int(down) >= 0 and self._pilha[coluna].get(down) is None:
+            logger.debug('Embaixo vazio!!!')
             return False
-        # print(self._pilha[coluna].get(down))
-        # print(col_left, col_right, coluna, altura, up, down)
         return True
 
     def first_free_position(self):
@@ -173,7 +188,7 @@ class Pilha():
 
     def remove(self, position, container):
         coluna, altura = self.position_totuple(position)
-        if self.is_locked(coluna, altura) == {}:
+        if not coluna or self.is_locked(coluna, altura):
             return False
         # print(coluna, altura)
         if coluna:
@@ -185,9 +200,7 @@ class Pilha():
         return False
 
     def stack(self, container, position=None):
-        coluna, altura = self.position_totuple(position)
-        if not coluna:
-            coluna, altura = self.is_position_free(position)
+        coluna, altura = self.is_position_free(position)
         if coluna:
             self._atualiza_posicao(coluna, altura, container)
             return coluna + altura
@@ -251,7 +264,6 @@ class Patio():
                 nome_pilha = '{0:04d}'.format(len(self._pilhas) + 1)
                 # print('Add pilha %s ' % nome_pilha)
                 self.add_pilha(nome_pilha)
-                print('add posicao')
                 posicao = self.stack(container, nome_pilha, posicao)
         else:
             posicao = self.stack(container, nome_pilha, posicao)

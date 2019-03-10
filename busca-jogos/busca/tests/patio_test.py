@@ -40,7 +40,7 @@ class TestPilha(unittest.TestCase):
     def test_getcontainerinposition(self):
         p = Pilha('TESTE')
         position = p.stack(self.c1)
-        print(position)
+        # print(position)
         c = p.get_containerinposition(position)
         assert c == self.c1
         c = p.get_containerinposition('NONECSIST')
@@ -49,9 +49,11 @@ class TestPilha(unittest.TestCase):
     def test_side_locked(self):
         p = Pilha('TESTE')
         position1 = p.stack(self.c1, 'A1')
+        # print('p', position1)
         coluna, altura = p.position_totuple(position1)
+        # print(coluna, altura)
         locked = p.side_locked(coluna, altura)
-        assert locked == {}
+        assert locked == set()
         position2 = p.stack(self.c2, 'B1')
         coluna, altura = p.position_totuple(position1)
         locked = p.side_locked(coluna, altura)
@@ -63,6 +65,7 @@ class TestPilha(unittest.TestCase):
         p = Pilha('TESTE')
         position1 = p.stack(self.c1)
         position2 = p.stack(self.c2)
+        # print(position1)
         coluna, altura = p.position_totuple(position1)
         locked = p.up_locked(coluna, altura)
         assert locked is True
