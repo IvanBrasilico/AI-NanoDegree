@@ -4,6 +4,8 @@ import numpy as np
 
 from busca.classes import ALTURAS, COLUNAS
 
+colunas_dict = {k: ind for ind, k in enumerate(COLUNAS)}
+alturas_dict = {k: ind for ind, k in enumerate(ALTURAS)}
 
 class Container():
     def __init__(self, numero, time_to_leave=5):
@@ -66,8 +68,8 @@ class Pilha():
         return self.up_locked(coluna, altura)
 
     def side_locked(self, pcoluna, paltura):
-        ind_col = COLUNAS.find(pcoluna)
-        ind_alt = ALTURAS.find(paltura)
+        ind_col = colunas_dict[pcoluna]
+        ind_alt = alturas_dict[paltura]
         ind_colunas = []
         if ind_col + 1 < len(COLUNAS):
             ind_colunas.append(ind_col + 1)
@@ -79,7 +81,7 @@ class Pilha():
         return False
 
     def up_locked(self, pcoluna, paltura):
-        ind_alt = ALTURAS.find(paltura)
+        ind_alt = alturas_dict[paltura]
         if ind_alt == len(ALTURAS) - 1:
             return True
         altura = ALTURAS[ind_alt + 1]
@@ -120,8 +122,8 @@ class Pilha():
     def is_acessible(self, coluna, altura):
         up = str(int(altura) + 1)
         down = str(int(altura) - 1)
-        col_right = COLUNAS.find(coluna) + 1
-        col_left = COLUNAS.find(coluna) - 1
+        col_right = colunas_dict[coluna] + 1
+        col_left = colunas_dict[coluna] - 1
         if (col_left > 0) and (col_right < len(COLUNAS)):
             if self._pilha[col_right].get(up) is not None or \
                     self._pilha[col_left].get(up) is not None:
@@ -170,8 +172,8 @@ class Pilha():
             time_to_leave = 0
         else:
             time_to_leave = container.time_to_leave
-        ind_coluna = COLUNAS.find(coluna)
-        ind_altura = ALTURAS.find(altura)
+        ind_coluna = colunas_dict[coluna]
+        ind_altura = alturas_dict[altura]
         self._pilhanp[ind_coluna, ind_altura] = time_to_leave
 
     def remove(self, position, container):
@@ -204,16 +206,16 @@ class Patio():
     def add_pilha(self, nome_pilha=None):
         self._pilhas[nome_pilha] = Pilha(nome_pilha)
 
-    def stack(self, container, nome_pilha, posicao=None):
+    def stack(self, container, nome_pilha=None, position=None):
         pilha = self._pilhas.get(nome_pilha)
         if pilha:
-            posicao = pilha.stack(container, posicao)
-            if posicao:
-                self._containers[container._numero] = (nome_pilha, posicao, container)
-            return posicao
+            position = pilha.stack(container, position)
+            if position:
+                self._containers[container._numero] = (nome_pilha, position, container)
+            return position
         return False
 
-    def unstack(self, nome_pilha, position, container):
+    def unstack(self, container, nome_pilha=None, position=None):
         pilha = self._pilhas.get(nome_pilha)
         if pilha:
             sucess = pilha.remove(position, container)
