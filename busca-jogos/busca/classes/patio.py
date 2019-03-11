@@ -50,7 +50,10 @@ class Pilha():
         try:
             coluna = position[0]
             altura = position[1]
-        except:
+        except (IndexError, TypeError) as err:
+            logger.debug(
+                f'position {position} invalid passed to position_totuple')
+            logger.debug(str(err))
             pass
         return coluna, altura
 
@@ -146,7 +149,7 @@ class Pilha():
         # print(up, down, col_left, col_right)
         if (col_left > 0):
             left = COLUNAS[col_left]
-            if self._pilha[col_left].get(up) is not None:
+            if self._pilha[left].get(up) is not None:
                 logger.debug('Lado esquerdo ocupado!!!')
                 return False
         if (col_right < len(COLUNAS)):
@@ -165,7 +168,7 @@ class Pilha():
     def first_free_position(self):
         for coluna in COLUNAS:
             for altura in ALTURAS:
-                if self._pilha[coluna][altura] == None:
+                if self._pilha[coluna][altura] is None:
                     return coluna, altura
         return False, False
 
@@ -209,7 +212,7 @@ class Pilha():
     def has_space(self):
         for coluna in COLUNAS:
             for altura in ALTURAS:
-                if self._pilha[coluna][altura] == None:
+                if self._pilha[coluna][altura] is None:
                     return True
         return False
 
@@ -229,7 +232,8 @@ class Patio():
         if pilha:
             position = pilha.stack(container, position)
             if position:
-                self._containers[container._numero] = (nome_pilha, position, container)
+                self._containers[container._numero] = \
+                    (nome_pilha, position, container)
             return position
         return False
 
@@ -270,7 +274,8 @@ class Patio():
         return posicao
 
     def get_container_tuple(self, numero):
-        nome_pilha, position, container = self._containers.get(numero, (None, None, None))
+        nome_pilha, position, container = \
+            self._containers.get(numero, (None, None, None))
         return nome_pilha, position, container
 
     def get_container_numero(self, numero):
@@ -282,12 +287,14 @@ class Patio():
     def remove_container(self, container):
         if container is None or not (isinstance(container, Container)):
             return False
-        nome_pilha, position, container = self.get_container_tuple(container._numero)
+        nome_pilha, position, container = \
+            self.get_container_tuple(container._numero)
         if position is None:
             return False
         return self.remove_position(container, nome_pilha, position)
 
-    def remove_position(self, container: Container, nome_pilha: str, position: str):
+    def remove_position(self, container: Container,
+                        nome_pilha: str, position: str):
         return self.unstack(container, nome_pilha, position)
 
     def pilhas_com_espaco(self):

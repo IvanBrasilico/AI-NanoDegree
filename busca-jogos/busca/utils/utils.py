@@ -15,7 +15,8 @@ def gera_containers_transito(n=NCONTAINERS):
     return containers_transito
 
 
-def gera_agendamento_containers(containers_transito, dias=30, qtdedia=100, erro=2):
+def gera_agendamento_containers(containers_transito, dias=30,
+                                qtdedia=100, erro=2):
     agendamentos = defaultdict(list)
     container_por_tempo = defaultdict(list)
     for c in containers_transito:
@@ -25,7 +26,8 @@ def gera_agendamento_containers(containers_transito, dias=30, qtdedia=100, erro=
         for t in tempos_dia:
             containers = container_por_tempo[int(t)]
             if containers:
-                container_transito = containers.pop(randint(0, len(containers) - 1))
+                container_transito = \
+                    containers.pop(randint(0, len(containers) - 1))
                 if container_transito:
                     agendamentos[dia].append(container_transito)
     return agendamentos

@@ -29,7 +29,9 @@ class Simulador:
                 qtde += 1
                 if qtde > limit:
                     break
-        return self.containers_transito, self.containers_agendados, self.pre_load
+        return self.containers_transito, \
+               self.containers_agendados, \
+               self.pre_load
 
     def initialize_gerente(self, mode=None):
         if mode is None or mode == 'nenhum':
@@ -56,15 +58,19 @@ class Simulador:
                             random_dia += 1
                         else:
                             random_dia -= 1
-                        containers_dentro = self.containers_agendados.get(random_dia, [])
+                        containers_dentro = \
+                            self.containers_agendados.get(random_dia, [])
                         continue
                     totalgateout += 1
                     random_ind = randint(0, len(containers_dentro) - 1)
                     fila_out.append(containers_dentro.pop(random_ind))
-                totalremocoes = self.gerente.processa_fila_gateout(fila_out, mode=mode_out)
+                totalremocoes = \
+                    self.gerente.processa_fila_gateout(fila_out, mode=mode_out)
                 self.containers_transito.extend(fila_out)
                 for cc_out in fila_out:
-                    self.containers_agendados[int(cc_out.time_to_leave)].append(cc_out)
+                    self.containers_agendados[
+                        int(cc_out.time_to_leave)
+                    ].append(cc_out)
                 totalgeral += totalremocoes / len(fila_out)
             # GATE-IN
             # Entrar somente o que conseguiu sair, usando len(fila_out)

@@ -9,7 +9,10 @@ class GerenteRemocao:
 
     def pilha_mesmo_tempo(self, container):
         tempo = container.time_to_leave
-        means = sorted([(abs(pilha.time_mean() - tempo), pilha) for pilha in self._patio.pilhas_com_espaco()])
+        means = sorted(
+            [(abs(pilha.time_mean() - tempo), pilha)
+             for pilha in self._patio.pilhas_com_espaco()]
+        )
         if means:
             return means[0][1]
         return None
@@ -19,7 +22,8 @@ class GerenteRemocao:
 
     def monta_caminho_remocao(self, numero: str) -> list:
         """Analisa caminho mínimo para remoção do container."""
-        nome_pilha, position, container = self._patio.get_container_tuple(numero)
+        nome_pilha, position, container = \
+            self._patio.get_container_tuple(numero)
         pilha = self._patio._pilhas.get(nome_pilha)
         caminho = []
         if pilha:
@@ -57,7 +61,7 @@ class GerenteRemocao:
         for container in fila:
             caminho = self.monta_caminho_remocao(container._numero)
             caminhos.append((len(caminho), container._numero))
-        if  mode and 'ordered' in mode:
+        if mode and 'ordered' in mode:
             caminhos = sorted(caminhos, key=lambda x: x[0])
         for _, numero in caminhos:
             caminho2 = self.remove_caminho(numero)

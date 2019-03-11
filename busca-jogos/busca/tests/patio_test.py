@@ -14,6 +14,7 @@ class TestContainer(unittest.TestCase):
         assert c._numero == '001'
         assert isinstance(c, Container)
         assert str(c) == '001'
+        assert c.__repr__() == '001'
         c.time_to_leave = 3
         assert c.time_to_leave == 3
 
@@ -80,7 +81,7 @@ class TestPilha(unittest.TestCase):
     def test_posicao_inexistente(self):
         p = Pilha('TESTE')
         with self.assertRaises(KeyError):
-            position = p.stack(self.c1, 'A9')
+            p.stack(self.c1, 'A9')
 
     def test_posicao_invalida(self):
         p = Pilha('TESTE')
@@ -93,7 +94,8 @@ class TestPilha(unittest.TestCase):
         assert p.time_mean() == 0
         p.stack(self.c1)
         p.stack(self.c2)
-        assert p.time_mean() == (self.c1.time_to_leave + self.c2.time_to_leave) / 2
+        assert p.time_mean() == \
+               (self.c1.time_to_leave + self.c2.time_to_leave) / 2
         p = Pilha('TESTE')
         for i in range(30):
             p.stack(self.c1)
@@ -140,7 +142,7 @@ class TestPilha(unittest.TestCase):
     def test_has_space(self):
         p = Pilha('TESTE')
         assert p.has_space() is True
-        position1 = p.stack(self.c1)
+        p.stack(self.c1)
         assert p.has_space() is True
         for r in range(29):
             p.stack(Container(str(r)))
@@ -201,7 +203,7 @@ class TestPatio(unittest.TestCase):
 
     def test_get_container_numero(self):
         self.test_add_pilha()
-        posicao = self.patio.stack(self.c1, 'P01')
+        self.patio.stack(self.c1, 'P01')
         c = self.patio.get_container_numero(self.c1._numero)
         assert c == self.c1
         c = self.patio.get_container_numero(self.c2._numero)
@@ -228,7 +230,7 @@ class TestPatio(unittest.TestCase):
         assert pilha._pilha[coluna][altura]._numero == '002'
 
     def test_remove_container(self):
-        posicao = self.patio.add_container(self.c1)
+        self.patio.add_container(self.c1)
         success = self.patio.remove_container(self.c1)
         assert success is True
         success = self.patio.remove_container(self.c2)
@@ -263,14 +265,14 @@ if __name__ == '__main__':
         functions = [func for func in dir(classe) if 'test_' in func]
         for function in functions:
             # print(f'classe:{classe.__name__} function:{function}')
-            setup_code = f'''
+            setup_code = f"""
 test = {classe.__name__}()
-            '''
-            test_code = f'''
+            """
+            test_code = f"""
 test.setUp()
 test.{function}()
 test.tearDown()
-            '''
+            """
             times = timeit.repeat(setup=setup_code,
                                   stmt=test_code,
                                   repeat=3,
@@ -281,7 +283,7 @@ test.tearDown()
                 f'Time {classe.__name__} {function} {min(times):0.4f}'
             ))
     s1 = time()
-    for time, descricao in sorted(
+    for _, descricao in sorted(
             all_times, key=lambda x: x[0]):
         print(descricao)
     print(f'Tempo total {s1 - s0:0.2f}')
