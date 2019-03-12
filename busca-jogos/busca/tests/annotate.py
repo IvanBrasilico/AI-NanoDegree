@@ -2,13 +2,12 @@ import unittest
 
 from pyannotate_runtime import collect_types
 
-def run_tests(module='__main__'):
-    unittest.main(module)
+module = 'busca.tests.patio_test'
 
 if __name__ == '__main__':
     collect_types.init_types_collection()
     with collect_types.collect():
-        run_tests('busca.tests.patio_test')
+        unittest.main(module)
     collect_types.dump_stats('type_info.json')
 
 """"

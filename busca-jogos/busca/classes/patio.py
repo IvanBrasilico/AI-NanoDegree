@@ -1,10 +1,5 @@
 from collections import OrderedDict
-from typing import Any
-from typing import List
-from typing import Optional
-from typing import Set
-from typing import Tuple
-from typing import Union
+from typing import Any, List, Optional, Set, Tuple, Union
 
 from busca.classes import ALTURAS, COLUNAS
 from busca.utils.logconf import logger
@@ -106,7 +101,7 @@ class Pilha():
                 sides_locked.add(Pilha.LEFT)
         return sides_locked
 
-    def up_locked_position(self, position:str)-> bool:
+    def up_locked_position(self, position: str) -> bool:
         coluna, altura = self.position_totuple(position)
         if coluna and altura:
             return self.up_locked(coluna, altura)
@@ -202,7 +197,7 @@ class Pilha():
         return False, False
 
     def is_position_free(self,
-                         position=None,  # type: Union[None, Tuple[str, str], str]
+                         position: str = None,
                          ):
         # type: (...) -> Tuple[Union[bool, str], Union[bool, str]]
         """Retorna posicao se livre, senao None
@@ -317,8 +312,9 @@ class Patio():
             posicao = self.stack(container, nome_pilha, posicao)
         return posicao
 
-    def get_container_tuple(self, numero):
-        # type: (str) -> Tuple[Optional[str], Optional[str], Optional[Container]]
+    def get_container_tuple(self, numero: str
+                            ) -> \
+            Tuple[Optional[str], Optional[str], Optional[Container]]:
         nome_pilha, position, container = \
             self._containers.get(numero, (None, None, None))
         return nome_pilha, position, container
