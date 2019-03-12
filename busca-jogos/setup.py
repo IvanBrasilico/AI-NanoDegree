@@ -32,6 +32,7 @@ setup(
             'flake8-todo',
             'isort',
             'mypy',
+            'pyannotate',
             'pylint',
             'pytest',
             'pytest-cov',

@@ -1,4 +1,10 @@
 from collections import OrderedDict
+from typing import Any
+from typing import List
+from typing import Optional
+from typing import Set
+from typing import Tuple
+from typing import Union
 
 from busca.classes import ALTURAS, COLUNAS
 from busca.utils.logconf import logger
@@ -9,21 +15,26 @@ alturas_dict = {k: ind for ind, k in enumerate(ALTURAS)}
 
 class Container():
     def __init__(self, numero, time_to_leave=5):
+        # type: (str, int) -> None
         self._numero = numero
         self._time_to_leave = time_to_leave
 
     @property
     def time_to_leave(self):
+        # type: () -> int
         return self._time_to_leave
 
     @time_to_leave.setter
     def time_to_leave(self, time_to_leave):
+        # type: (int) -> None
         self._time_to_leave = time_to_leave
 
     def __str__(self):
+        # type: () -> str
         return self._numero
 
     def __repr__(self):
+        # type: () -> str
         return self._numero
 
 
@@ -34,17 +45,22 @@ class Pilha():
     UP = 3
     RIGHT = 4
 
-    def __init__(self, nome, altura=len(ALTURAS), largura=len(COLUNAS)):
-        self._pilha = OrderedDict()
+    def __init__(self, nome,
+                 max_altura=len(ALTURAS),
+                 max_largura=len(COLUNAS)):
+        # type: (str, int, int) -> None
+        self._pilha: dict = OrderedDict()
         self._nome = nome
-        self._altura = altura
-        self._largura = largura
+        self._altura = max_altura
+        self._largura = max_largura
         for coluna in COLUNAS:
             self._pilha[coluna] = OrderedDict()
             for altura in ALTURAS:
                 self._pilha[coluna][altura] = None
 
-    def position_totuple(self, position):
+    def position_totuple(self,
+                         position: str
+                         ) -> Tuple[Optional[str], Optional[str]]:
         coluna = None
         altura = None
         try:
@@ -58,6 +74,7 @@ class Pilha():
         return coluna, altura
 
     def get_containerinposition(self, position):
+        # type: (str) -> Optional[Container]
         coluna, altura = self.position_totuple(position)
         if coluna is not None:
             _coluna = self._pilha.get(coluna)
@@ -66,10 +83,14 @@ class Pilha():
         return None
 
     def side_locked_position(self, position):
+        # type: (str) -> Set[int]
         coluna, altura = self.position_totuple(position)
-        return self.side_locked(coluna, altura)
+        if coluna and altura:
+            return self.side_locked(coluna, altura)
+        return set()
 
     def side_locked(self, pcoluna, paltura):
+        # type: (str, str) -> Set[int]
         ind_col = colunas_dict[pcoluna]
         ind_alt = alturas_dict[paltura]
         sides_locked = set()
@@ -85,11 +106,14 @@ class Pilha():
                 sides_locked.add(Pilha.LEFT)
         return sides_locked
 
-    def up_locked_position(self, position):
+    def up_locked_position(self, position:str)-> bool:
         coluna, altura = self.position_totuple(position)
-        return self.up_locked(coluna, altura)
+        if coluna and altura:
+            return self.up_locked(coluna, altura)
+        return True
 
     def up_locked(self, pcoluna, paltura):
+        # type: (str, str) -> bool
         ind_alt = alturas_dict[paltura]
         if ind_alt == len(ALTURAS) - 1:
             return True
@@ -99,6 +123,7 @@ class Pilha():
         return False
 
     def time_mean(self):
+        # type: () -> float
         soma = 0
         qtde = 0
         for coluna in self._pilha.values():
@@ -111,6 +136,7 @@ class Pilha():
         return soma / qtde
 
     def sides_locked(self, coluna, altura):
+        # type: (str, str) -> Set[int]
         """Retorna posicoes livres se tem carga na posicao, senao True
         :param posicao: String 'coluna'+'altura'. Caso nao passada,
         retorna primeira livre
@@ -125,6 +151,7 @@ class Pilha():
         return sides_free
 
     def is_locked(self, coluna, altura):
+        # type: (str, str) -> bool
         if self.up_locked(coluna, altura) or \
                 self.sides_locked(coluna, altura) == {Pilha.LEFT, Pilha.RIGHT}:
             return True
@@ -135,13 +162,14 @@ class Pilha():
         return self.is_locked(coluna, altura)
 
     def is_acessible(self, coluna, altura):
+        # type: (str, str) -> bool
         """Testa se é uma posição válida para armazenagem"""
         ind_alt = alturas_dict[altura]
         if ind_alt == len(ALTURAS) - 1:
             return False
         up = ALTURAS[ind_alt + 1]
         if ind_alt == 0:
-            down = -1
+            down = None
         else:
             down = ALTURAS[ind_alt - 1]
         col_right = colunas_dict[coluna] + 1
@@ -160,19 +188,23 @@ class Pilha():
         if self._pilha[coluna].get(up) is not None:
             logger.debug('Em cima ocupado!!!')
             return False
-        if int(down) >= 0 and self._pilha[coluna].get(down) is None:
+        if down and self._pilha[coluna].get(down) is None:
             logger.debug('Embaixo vazio!!!')
             return False
         return True
 
     def first_free_position(self):
+        # type: () -> Tuple[str, str]
         for coluna in COLUNAS:
             for altura in ALTURAS:
                 if self._pilha[coluna][altura] is None:
                     return coluna, altura
         return False, False
 
-    def is_position_free(self, position=None):
+    def is_position_free(self,
+                         position=None,  # type: Union[None, Tuple[str, str], str]
+                         ):
+        # type: (...) -> Tuple[Union[bool, str], Union[bool, str]]
         """Retorna posicao se livre, senao None
         :param posicao: String 'coluna'+'altura'. Caso nao passada,
         retorna primeira livre
@@ -187,9 +219,11 @@ class Pilha():
             return self.first_free_position()
 
     def _atualiza_posicao(self, coluna, altura, container):
+        # type: (str, str, Optional[Container]) -> None
         self._pilha[coluna][altura] = container
 
     def remove(self, position, container):
+        # type: (Optional[str], Container) -> bool
         coluna, altura = self.position_totuple(position)
         if not coluna or self.is_locked(coluna, altura):
             return False
@@ -202,7 +236,11 @@ class Pilha():
                 return True
         return False
 
-    def stack(self, container, position=None):
+    def stack(self,
+              container,  # type: Container
+              position=None,  # type: Union[None, Tuple[str, str], str]
+              ):
+        # type: (...) -> Union[bool, str]
         coluna, altura = self.is_position_free(position)
         if coluna:
             self._atualiza_posicao(coluna, altura, container)
@@ -210,6 +248,7 @@ class Pilha():
         return False
 
     def has_space(self):
+        # type: () -> bool
         for coluna in COLUNAS:
             for altura in ALTURAS:
                 if self._pilha[coluna][altura] is None:
@@ -219,15 +258,18 @@ class Pilha():
 
 class Patio():
     def __init__(self, nome=''):
+        # type: (str) -> None
         self._nome = nome
-        self._pilhas = OrderedDict()
-        self._containers = OrderedDict()
-        self._history = OrderedDict()
+        self._pilhas: dict = OrderedDict()
+        self._containers: dict = OrderedDict()
+        self._history: dict = OrderedDict()
 
     def add_pilha(self, nome_pilha=None):
+        # type: (str) -> None
         self._pilhas[nome_pilha] = Pilha(nome_pilha)
 
     def stack(self, container, nome_pilha=None, position=None):
+        # type: (Container, str, Optional[str]) -> Union[bool, str]
         pilha = self._pilhas.get(nome_pilha)
         if pilha:
             position = pilha.stack(container, position)
@@ -238,6 +280,7 @@ class Patio():
         return False
 
     def unstack(self, container, nome_pilha=None, position=None):
+        # type: (Container, str, Optional[str]) -> bool
         pilha = self._pilhas.get(nome_pilha)
         if pilha is not None:
             success = pilha.remove(position, container)
@@ -248,6 +291,7 @@ class Patio():
         return False
 
     def add_container(self, container, nome_pilha=None, posicao=None):
+        # type: (Container, Optional[str], Optional[Any]) -> str
         """Adiciona container na pilha, ou no pátio.
         Adiciona pilha se pilha cheia.
         :param container: Objeto Container
@@ -274,17 +318,19 @@ class Patio():
         return posicao
 
     def get_container_tuple(self, numero):
+        # type: (str) -> Tuple[Optional[str], Optional[str], Optional[Container]]
         nome_pilha, position, container = \
             self._containers.get(numero, (None, None, None))
         return nome_pilha, position, container
 
     def get_container_numero(self, numero):
+        # type: (str) -> Optional[Container]
         nome_pilha, position, container = self.get_container_tuple(numero)
         if nome_pilha:
             return container
         return None
 
-    def remove_container(self, container):
+    def remove_container(self, container: Container) -> bool:
         if container is None or not (isinstance(container, Container)):
             return False
         nome_pilha, position, container = \
@@ -298,6 +344,7 @@ class Patio():
         return self.unstack(container, nome_pilha, position)
 
     def pilhas_com_espaco(self):
+        # type: () -> List[Pilha]
         result = []
         for pilha in self._pilhas.values():
             if pilha.has_space():
